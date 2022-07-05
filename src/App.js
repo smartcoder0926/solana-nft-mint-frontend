@@ -14,12 +14,10 @@ import { Provider } from '@project-serum/anchor';
 
 import { Connection } from '@solana/web3.js';
 import {
-  addBlList,
   addOgList,
   addWlList,
   initialize,
   multiMint,
-  removeBlList,
   removeOgList,
   removeWlList,
   setStage,
@@ -40,7 +38,6 @@ function App(props) {
   const inputRef = useRef();
   const ogkey = useRef();
   const wlkey = useRef();
-  const blkey = useRef();
   const og_price = useRef();
   const wl_price = useRef();
   const public_price = useRef();
@@ -173,7 +170,6 @@ function App(props) {
     // }
   }
 
-  async function test() {}
   async function init() {
     const provider = await getProvider();
     await initialize(provider, wallet);
@@ -207,16 +203,6 @@ function App(props) {
   async function removeWl() {
     const provider = await getProvider();
     await removeWlList(provider, wallet, [wlkey.current.value]);
-  }
-
-  async function addBl() {
-    const provider = await getProvider();
-    await addBlList(provider, wallet, [blkey.current.value]);
-  }
-
-  async function removeBl() {
-    const provider = await getProvider();
-    await removeBlList(provider, wallet, [blkey.current.value]);
   }
 
   async function changePrice() {

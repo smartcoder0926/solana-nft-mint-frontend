@@ -45,8 +45,8 @@ export const _getState = async (provider, wallet) => {
   }
 
   const ogList = await program.account.originalList.all();
-  for (const i in wlList) {
-    console.log(wlList[i].account.user.toBase58())
+  for (const i in ogList) {
+    console.log(ogList[i].account.user.toBase58())
   }
   console.log('wlList', wlList);
   console.log('ogList', ogList);
@@ -90,35 +90,44 @@ export const _getState = async (provider, wallet) => {
 };
 
 export const addOgList = async (provider, wallet, newLists) => {
-  console.log(newLists);
   const programID = new PublicKey(idl.metadata.address);
   const program = new Program(idl, programID, provider);
-  const [stakingPubkey, stakingBump] = await web3.PublicKey.findProgramAddress(
+  const [stakingPubkey] = await web3.PublicKey.findProgramAddress(
     [Buffer.from(utils.bytes.utf8.encode('wallet_nft_minting'))],
     program.programId
   );
-  await program.rpc.addOgList(stakingBump, newLists, {
+  const user = new PublicKey(newLists[0]);
+  const [ogPDA] = await web3.PublicKey.findProgramAddress(
+    [
+      Buffer.from(utils.bytes.utf8.encode('nftminting')),
+      Buffer.from(utils.bytes.utf8.encode('originallist')),
+      stakingPubkey.toBuffer(),
+      user.toBuffer(),
+    ],
+    program.programId
+  );
+  const tx = await program.rpc.addOgList(user, {
     accounts: {
-      mintingAccount: stakingPubkey,
       admin: wallet.publicKey,
-    },
+      mintingAccount: stakingPubkey,
+      ogList: ogPDA,
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+    }
   });
+  console.log('success', tx);
 };
 
 export const addWlList = async (provider, wallet, newLists) => {
-
-  console.log(newLists)
-
   const programID = new PublicKey(idl.metadata.address);
   const program = new Program(idl, programID, provider);
-  const [stakingPubkey, stakingBump] = await web3.PublicKey.findProgramAddress(
+  const [stakingPubkey] = await web3.PublicKey.findProgramAddress(
     [Buffer.from(utils.bytes.utf8.encode('wallet_nft_minting'))],
     program.programId
   );
-
-  let user = new PublicKey(newLists[0]);
-
-  const [wlPDA, wlPDABump] = await web3.PublicKey.findProgramAddress(
+  const user = new PublicKey(newLists[0]);
+  const [wlPDA] = await web3.PublicKey.findProgramAddress(
     [
       Buffer.from(utils.bytes.utf8.encode('nftminting')),
       Buffer.from(utils.bytes.utf8.encode('whitelist')),
@@ -127,11 +136,7 @@ export const addWlList = async (provider, wallet, newLists) => {
     ],
     program.programId
   );
-
-  console.log(stakingPubkey.toBuffer(), "wlPDA")
-  console.log(wlPDA.toBase58(), "wlPDA")
-
-  let tx = await program.rpc.addWlList(user, {
+  const tx = await program.rpc.addWlList(user, {
     accounts: {
       admin: wallet.publicKey,
       mintingAccount: stakingPubkey,
@@ -141,68 +146,67 @@ export const addWlList = async (provider, wallet, newLists) => {
       rent: anchor.web3.SYSVAR_RENT_PUBKEY,
     },
   });
-
-  console.log(tx, "success");
-};
-
-export const addBlList = async (provider, wallet, newLists) => {
-  const programID = new PublicKey(idl.metadata.address);
-  const program = new Program(idl, programID, provider);
-  const [stakingPubkey, stakingBump] = await web3.PublicKey.findProgramAddress(
-    [Buffer.from(utils.bytes.utf8.encode('wallet_nft_minting'))],
-    program.programId
-  );
-  await program.rpc.addBlList(stakingBump, newLists, {
-    accounts: {
-      mintingAccount: stakingPubkey,
-      admin: wallet.publicKey,
-    },
-  });
+  console.log('success', tx);
 };
 
 export const removeOgList = async (provider, wallet, newLists) => {
   const programID = new PublicKey(idl.metadata.address);
   const program = new Program(idl, programID, provider);
-  const [stakingPubkey, stakingBump] = await web3.PublicKey.findProgramAddress(
+  const [stakingPubkey] = await web3.PublicKey.findProgramAddress(
     [Buffer.from(utils.bytes.utf8.encode('wallet_nft_minting'))],
     program.programId
   );
-  await program.rpc.removeOgList(stakingBump, newLists, {
+  const user = new PublicKey(newLists[0]);
+  const [ogPDA] = await web3.PublicKey.findProgramAddress(
+    [
+      Buffer.from(utils.bytes.utf8.encode('nftminting')),
+      Buffer.from(utils.bytes.utf8.encode('originallist')),
+      stakingPubkey.toBuffer(),
+      user.toBuffer(),
+    ],
+    program.programId
+  );
+  const tx = await program.rpc.removeOgList({
     accounts: {
+      initializer: wallet.publicKey,
       mintingAccount: stakingPubkey,
-      admin: wallet.publicKey,
-    },
+      ogList: ogPDA,
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+    }
   });
+  console.log('success', tx);
 };
 
 export const removeWlList = async (provider, wallet, newLists) => {
   const programID = new PublicKey(idl.metadata.address);
   const program = new Program(idl, programID, provider);
-  const [stakingPubkey, stakingBump] = await web3.PublicKey.findProgramAddress(
+  const [stakingPubkey] = await web3.PublicKey.findProgramAddress(
     [Buffer.from(utils.bytes.utf8.encode('wallet_nft_minting'))],
     program.programId
   );
-  await program.rpc.removeWlList(stakingBump, newLists, {
-    accounts: {
-      mintingAccount: stakingPubkey,
-      admin: wallet.publicKey,
-    },
-  });
-};
-
-export const removeBlList = async (provider, wallet, newLists) => {
-  const programID = new PublicKey(idl.metadata.address);
-  const program = new Program(idl, programID, provider);
-  const [stakingPubkey, stakingBump] = await web3.PublicKey.findProgramAddress(
-    [Buffer.from(utils.bytes.utf8.encode('wallet_nft_minting'))],
+  const user = new PublicKey(newLists[0]);
+  const [wlPDA] = await web3.PublicKey.findProgramAddress(
+    [
+      Buffer.from(utils.bytes.utf8.encode('nftminting')),
+      Buffer.from(utils.bytes.utf8.encode('whitelist')),
+      stakingPubkey.toBuffer(),
+      user.toBuffer(),
+    ],
     program.programId
   );
-  await program.rpc.removeBlList(stakingBump, newLists, {
+  const tx = await program.rpc.removeWlList({
     accounts: {
+      initializer: wallet.publicKey,
       mintingAccount: stakingPubkey,
-      admin: wallet.publicKey,
-    },
+      wlList: wlPDA,
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+    }
   });
+  console.log('success', tx);
 };
 
 export const updatePrice = async (
@@ -320,24 +324,20 @@ export const initialize = async (provider, wallet) => {
       },
     }
   );
-
   console.log(ix, 'success');
 };
 
 export const multiMint = async (provider, wallet, count) => {
-  const { SystemProgram, Keypair } = web3;
+  const { SystemProgram } = web3;
   const programID = new PublicKey(idl.metadata.address);
   const program = new Program(idl, programID, provider);
-  const [stakingPubkey, stakingBump] = await web3.PublicKey.findProgramAddress(
+  const [stakingPubkey] = await web3.PublicKey.findProgramAddress(
     [Buffer.from(utils.bytes.utf8.encode('wallet_nft_minting'))],
     program.programId
   );
 
   const mintingAccountInfo = await program.account.mintingAccount.fetch(stakingPubkey);
-
-  console.log(mintingAccountInfo, "mintingAccountInfo")
-
-  const [userMintingPubkey, userMintingBump] =
+  const [userMintingPubkey] =
     await web3.PublicKey.findProgramAddress(
       [wallet.publicKey.toBuffer()],
       program.programId
@@ -376,10 +376,7 @@ export const multiMint = async (provider, wallet, count) => {
       )
     )[0];
   };
-
-  console.log("===============================================================")
-
-  const [wlPDA, wlPDABump] = await web3.PublicKey.findProgramAddress(
+  const [wlPDA] = await web3.PublicKey.findProgramAddress(
     [
       Buffer.from(utils.bytes.utf8.encode('nftminting')),
       Buffer.from(utils.bytes.utf8.encode('whitelist')),
@@ -388,8 +385,7 @@ export const multiMint = async (provider, wallet, count) => {
     ],
     program.programId
   );
-
-  const [ogPDA, ogPDABump] = await web3.PublicKey.findProgramAddress(
+  const [ogPDA] = await web3.PublicKey.findProgramAddress(
     [
       Buffer.from(utils.bytes.utf8.encode('nftminting')),
       Buffer.from(utils.bytes.utf8.encode('originallist')),
@@ -398,10 +394,6 @@ export const multiMint = async (provider, wallet, count) => {
     ],
     program.programId
   );
-
-  console.log(wlPDA.toBase58(), "wlPDA")
-  console.log(ogPDA.toBase58(), "ogPDA")
-
   const signersMatrix = [];
   const instructionsMatrix = [];
   for (let index = 0; index < count; index++) {
